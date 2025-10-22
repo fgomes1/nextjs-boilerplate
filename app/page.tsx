@@ -2,23 +2,24 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-// Importação do seu cliente Supabase SDK
+// Importação do seu cliente Supabase SDK (ajuste o caminho se necessário)
 import { supabase } from '@/lib/supabase'; 
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    // Tipagem: Aceita string (mensagem de erro) ou null
+    const [error, setError] = useState<string | null>(null); 
 
-    const handleLogin = async (e) => {
+    // CORREÇÃO DE TIPAGEM: Define 'e' como um evento de formulário
+    const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
 
-        // --- LÓGICA DE LOGIN REAL DO SUPABASE ---
         try {
-            // Chama o método de login do Supabase, passando o email e a senha
+            // CHAMADA REAL AO SUPABASE AUTH
             const { error: signInError } = await supabase.auth.signInWithPassword({ 
                 email, 
                 password 
@@ -26,7 +27,7 @@ export default function Login() {
             
             // Verifica se o Supabase retornou algum erro
             if (signInError) {
-                // Erros comuns: "Invalid login credentials" ou e-mail não confirmado
+                // Erro (ex: credenciais inválidas ou e-mail não confirmado)
                 throw signInError; 
             }
             
@@ -35,8 +36,9 @@ export default function Login() {
             
         } catch (err) {
             console.error('Supabase Login Error:', err);
-            // Mensagem amigável para o usuário
-            setError('Falha na autenticação. Verifique suas credenciais e confirme seu e-mail.');
+            // Tratamento de erro seguro (verifica se 'err' é um objeto Error)
+            const errorMessage = (err instanceof Error) ? err.message : 'Falha na autenticação. Verifique suas credenciais e confirme seu e-mail.';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -65,7 +67,9 @@ export default function Login() {
                             placeholder="••••••••" disabled={loading}
                         />
                     </div>
+                    {/* Exibe erro */}
                     {error && (<div className="text-sm text-red-600 text-center">{error}</div>)}
+                    
                     <div>
                         <button type="submit" disabled={loading}
                             className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
@@ -77,7 +81,7 @@ export default function Login() {
                     </div>
                 </form>
                 <div className="text-center text-sm">
-                    {/* Usando Link do Next.js para navegação suave */}
+                    {/* Link para a página de registro */}
                     <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
                         Não tem conta? Cadastre-se
                     </Link>

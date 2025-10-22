@@ -2,19 +2,20 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-// IMPORTANTE: Adicione a importação do seu cliente Supabase SDK aqui!
-// Assumindo que você o salvou em '@/lib/supabase'
+// Importação do seu cliente Supabase SDK
 import { supabase } from '@/lib/supabase'; 
 
 export default function Register() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    // Tipagem: Aceita string (mensagem) ou null
+    const [message, setMessage] = useState<string | null>(null); 
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState(null);
     const [isSuccess, setIsSuccess] = useState(false);
 
-    const handleRegister = async (e) => {
+    // CORREÇÃO: Tipagem explícita do parâmetro de evento 'e'
+    const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
         setMessage(null);
@@ -36,11 +37,11 @@ export default function Register() {
             
             // 3. Tratamento de Erro do Supabase
             if (error) {
-                // Erros comuns: senha muito fraca, e-mail já registrado, etc.
+                // Se o Supabase retornou um erro, lançamos para o bloco catch
                 throw error; 
             }
             
-            // 4. Sucesso: O usuário foi criado, mas geralmente precisa confirmar o e-mail
+            // 4. Sucesso
             setMessage('Registro bem-sucedido! Verifique sua caixa de entrada (e spam) para confirmar seu e-mail.');
             setIsSuccess(true);
             
@@ -51,8 +52,13 @@ export default function Register() {
             
         } catch (err) {
             console.error('Supabase Sign Up Error:', err);
-            // Mensagem de erro amigável baseada no erro do Supabase
-            setMessage(err.message || 'Falha no registro. O e-mail pode já estar em uso ou a senha é muito curta.');
+            
+            // CORREÇÃO: Tratamento de erro seguro (verifica se 'err' é um objeto Error)
+            const errorMessage = (err instanceof Error) 
+                ? err.message 
+                : 'Falha no registro. O e-mail pode já estar em uso ou a senha é muito curta.';
+            
+            setMessage(errorMessage);
             setIsSuccess(false);
         } finally {
             setLoading(false);
