@@ -22,7 +22,8 @@ O projeto utiliza **Next.js**. Para iniciar o desenvolvimento:
 Primeiro, instale as dependências e inicie o servidor de desenvolvimento:
 
 ```bash
-npm install 
+npm install
+npm run build
 npm run dev
 ```
 
