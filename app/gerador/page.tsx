@@ -9,8 +9,10 @@ const EDGE_FUNCTION_TEST_URL = 'https://mqfxtvgupcvxkggwzjla.supabase.co/functio
 
 export default function Gerador() {
     const [topico, setTopico] = useState('');
-    const [userId, setUserId] = useState(null); 
-    const [userToken, setUserToken] = useState(null); // NOVO: Armazenar o token JWT
+    
+    // CORREÇÃO: Definindo explicitamente o tipo como string OU null
+    const [userId, setUserId] = useState<string | null>(null); 
+    const [userToken, setUserToken] = useState<string | null>(null); 
     
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -20,15 +22,16 @@ export default function Gerador() {
     useEffect(() => {
         const fetchUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            const { data: sessionData } = await supabase.auth.getSession(); // NOVO: Obtém a sessão
+            const { data: sessionData } = await supabase.auth.getSession(); 
 
             if (!user || !sessionData.session) {
                 // Se não estiver logado, redireciona
                 window.location.href = '/login'; 
                 return;
             }
-            setUserId(user.id);
-            setUserToken(sessionData.session.access_token); // Salva o token JWT
+            // AQUI O user.id é uma string UUID, e o TypeScript agora aceita a atribuição
+            setUserId(user.id); 
+            setUserToken(sessionData.session.access_token);
         };
         fetchUser();
     }, []); 
@@ -48,8 +51,7 @@ export default function Gerador() {
 
         const inputs = {
             topico,
-            // Nota: Embora a função de teste só use topico, enviamos o userId por boa prática
-            userId 
+            userId // Mantemos userId para a Edge Function completa
         };
         
         try {
@@ -58,7 +60,7 @@ export default function Gerador() {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
-                    // ** CORREÇÃO CRÍTICA: Enviar o Token JWT no cabeçalho Authorization **
+                    // Enviando o Token JWT para autorização (resolveu o 401)
                     'Authorization': `Bearer ${userToken}`,
                 },
                 body: JSON.stringify(inputs)
@@ -70,6 +72,7 @@ export default function Gerador() {
                 throw new Error(iaResponse.error || iaResponse.details || 'Erro desconhecido no servidor de IA.');
             }
 
+            // Define o JSON simples gerado pela IA para exibição
             setPlanoGerado(iaResponse); 
 
         } catch (err) {
